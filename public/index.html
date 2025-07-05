@@ -28,13 +28,8 @@
       <input id="cEmail" placeholder="Email Panel" required class="w-full p-3 rounded bg-slate-800" />
       <input id="cServer" placeholder="Nama Server" required class="w-full p-3 rounded bg-slate-800" />
 
-      <select id="cRam" class="w-full p-3 rounded bg-slate-800 text-white">
-        ${[...Array(10).keys()].map(i => {
-          const val = (i + 1) * 1024;
-          return `<option value="${val}">RAM ${i + 1} GB</option>`;
-        }).join('')}
-        <option value="0">RAM Unlimited</option>
-      </select>
+      <!-- ✅ Select RAM (opsi akan diisi lewat JavaScript) -->
+      <select id="cRam" class="w-full p-3 rounded bg-slate-800 text-white"></select>
 
       <button class="bg-green-600 w-full p-3 rounded font-semibold">🚀 Buat Panel</button>
     </form>
@@ -63,7 +58,20 @@
       document.getElementById("mainContent").classList.remove("hidden");
     }
 
-    // Proses login
+    // 🧠 Generate opsi RAM 1-10 GB + Unlimited
+    const ramSelect = document.getElementById("cRam");
+    for (let i = 1; i <= 10; i++) {
+      const opt = document.createElement("option");
+      opt.value = i * 1024;
+      opt.textContent = `RAM ${i} GB`;
+      ramSelect.appendChild(opt);
+    }
+    const optUnlimited = document.createElement("option");
+    optUnlimited.value = 0;
+    optUnlimited.textContent = "RAM Unlimited";
+    ramSelect.appendChild(optUnlimited);
+
+    // 🔐 Proses login
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = document.getElementById("loginUsername").value;
@@ -87,7 +95,7 @@
       }
     });
 
-    // Form pembuatan panel
+    // 🛰️ Form submit
     document.getElementById("createForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -107,7 +115,7 @@
       if (res.ok) {
         document.getElementById("rUsername").innerText = username;
         document.getElementById("rEmail").innerText = email;
-        document.getElementById("rPassword").innerText = data.password;
+        document.getElementById("rPassword").innerText = data.password || "Default123!";
         document.getElementById("result").classList.remove("hidden");
       } else {
         alert("❌ Gagal: " + data.error);
