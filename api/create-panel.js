@@ -9,19 +9,24 @@ function generateRandomPassword(length = 10) {
 
 export default async function handler(req, res) {
   const { username, email, serverName, ram, cpu } = req.body;
+
   const api = process.env.PANEL_API_URL;
   const key = process.env.PANEL_API_KEY;
 
-  if (!api || !key) return res.status(500).json({ error: "API_KEY atau URL belum dikonfigurasi." });
+  if (!api || !key) {
+    return res.status(500).json({ error: "API_KEY atau URL belum dikonfigurasi." });
+  }
 
+  // 🔐 Generate password untuk server
   const password = generateRandomPassword();
 
+  // 🧠 Konfigurasi Payload Server
   const payload = {
     name: serverName,
-    user: 1,
-    egg: 15,
+    user: 1, // bisa disesuaikan jika dynamic
+    egg: 5, // ⚠️ pastikan ini ID egg yang benar
     docker_image: "ghcr.io/pterodactyl/yolks:nodejs_18",
-    startup: "npm start",
+    startup: "{{COMMAND}}", // gunakan variable sesuai format Egg
     limits: {
       memory: ram,
       swap: 0,
@@ -32,7 +37,9 @@ export default async function handler(req, res) {
     environment: {
       USERNAME: username,
       EMAIL: email,
-      PASSWORD: password // ⬅️ password masuk ke environment
+      PASSWORD: password,
+      COMMAND: "npm start",     // ✅ wajib jika Egg pakai {{COMMAND}}
+      STARTUP: "npm start"      // ✅ jika Egg juga butuh STARTUP var
     },
     feature_limits: {
       databases: 1,
@@ -40,7 +47,7 @@ export default async function handler(req, res) {
       backups: 1
     },
     deploy: {
-      locations: [1],
+      locations: [1], // pastikan location ID tersedia
       dedicated_ip: false,
       port_range: []
     },
@@ -59,13 +66,16 @@ export default async function handler(req, res) {
     });
 
     const data = await resp.json();
+
     if (resp.ok) {
-      // Kirim juga password ke frontend
+      // ✅ Kirim juga password ke frontend
       return res.status(200).json({ ...data, password });
     }
 
+    // ⛔ Error dari Pterodactyl
     res.status(400).json({ error: data.errors?.[0]?.detail || "Gagal membuat panel." });
   } catch {
+    // ⛔ Koneksi ke panel gagal
     res.status(500).json({ error: "Koneksi ke panel gagal." });
   }
 }
