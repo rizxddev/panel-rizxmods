@@ -5,25 +5,6 @@
   <title>Reseller Panel RizxMods</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(20px) translateX(-50%); }
-      to { opacity: 1; transform: translateY(0) translateX(-50%); }
-    }
-
-    @keyframes fadeOut {
-      from { opacity: 1; transform: translateY(0) translateX(-50%); }
-      to { opacity: 0; transform: translateY(20px) translateX(-50%); }
-    }
-
-    .animate-slide-in {
-      animation: slideIn 0.3s ease-out forwards;
-    }
-
-    .animate-fade-out {
-      animation: fadeOut 0.3s ease-in forwards;
-    }
-  </style>
 </head>
 <body class="bg-slate-900 text-white">
 
@@ -38,40 +19,49 @@
     </form>
   </div>
 
-  <!-- ✅ Form Pembuatan Panel -->
+  <!-- ✅ Konten Utama -->
   <div id="mainContent" class="hidden">
     <h1 class="text-center text-2xl font-bold mt-8">Halo, selamat datang di panel reseller RizxMods</h1>
 
+    <!-- ✅ Form Buat Panel -->
     <form id="createForm" class="max-w-md mx-auto mt-6 space-y-2">
       <input id="cUsername" placeholder="Username Panel" required class="w-full p-3 rounded bg-slate-800" />
       <input id="cServer" placeholder="Nama Server" required class="w-full p-3 rounded bg-slate-800" />
-
       <select id="cRam" class="w-full p-3 rounded bg-slate-800 text-white"></select>
-
       <button class="bg-green-600 w-full p-3 rounded font-semibold">🚀 Buat Panel</button>
     </form>
 
     <!-- ✅ Output hasil panel dibuat -->
     <div id="result" class="mt-6 hidden max-w-md mx-auto bg-slate-800 rounded p-4 text-sm space-y-2">
       <p>✅ <strong>Panel berhasil dibuat!</strong></p>
+
       <p><b>Username:</b> <span id="rUsername"></span></p>
-      <p><b>Email:</b> <span id="rEmail"></span></p>
-      <p><b>Password:</b> <span id="rPassword"></span>
-        <button onclick="copyPassword()" class="ml-2 text-blue-400 hover:underline text-xs">Salin</button>
+
+      <p>
+        <b>Email:</b> <span id="rEmail"></span>
+        <button onclick="copyText('rEmail')" class="ml-2 text-blue-400 hover:underline text-xs">Salin</button>
+      </p>
+
+      <p>
+        <b>Password:</b> <span id="rPassword"></span>
+        <button onclick="copyText('rPassword')" class="ml-2 text-blue-400 hover:underline text-xs">Salin</button>
+      </p>
+
+      <p>
+        <b>Panel URL:</b> <span id="rPanelUrl"></span>
+        <button onclick="copyText('rPanelUrl')" class="ml-2 text-blue-400 hover:underline text-xs">Salin</button>
       </p>
     </div>
 
     <button onclick="logout()" class="mt-8 block mx-auto text-sm underline text-gray-400">Logout</button>
   </div>
 
-  <!-- ✅ Toast Notification -->
-  <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-white text-black text-sm px-4 py-2 rounded shadow-lg hidden z-50">
-    🔐 Password disalin!
-  </div>
+  <!-- ✅ Toast -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-yellow-300 text-black px-4 py-2 rounded-xl shadow-lg hidden z-50 font-medium"></div>
 
-  <!-- ✅ Script Utama -->
+  <!-- ✅ Script -->
   <script>
-    // Cek login
+    // Cek token
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
 
@@ -80,7 +70,7 @@
       document.getElementById("mainContent").classList.remove("hidden");
     }
 
-    // Login Handler
+    // Login
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = document.getElementById("loginUsername").value;
@@ -104,7 +94,7 @@
       }
     });
 
-    // Generate RAM 1–10 GB + Unlimited
+    // RAM List
     const ramSelect = document.getElementById("cRam");
     for (let i = 1; i <= 10; i++) {
       const opt = document.createElement("option");
@@ -117,7 +107,7 @@
     optUnlimited.textContent = "RAM Unlimited";
     ramSelect.appendChild(optUnlimited);
 
-    // Submit handler
+    // Buat panel
     document.getElementById("createForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -138,38 +128,31 @@
         document.getElementById("rUsername").innerText = username;
         document.getElementById("rEmail").innerText = email;
         document.getElementById("rPassword").innerText = data.password || "Default123!";
+        document.getElementById("rPanelUrl").innerText = data.panel_url || "Tidak tersedia";
         document.getElementById("result").classList.remove("hidden");
       } else {
-        alert("❌ Gagal: " + data.error);
+        showToast("❌ Gagal: " + data.error);
       }
     });
 
-    function copyPassword() {
-      const pass = document.getElementById("rPassword").innerText;
-      navigator.clipboard.writeText(pass);
-      showToast("🔐 Password disalin!");
-    }
-
-    function logout() {
-      localStorage.clear();
-      location.reload();
+    function copyText(id) {
+      const text = document.getElementById(id)?.innerText || "";
+      if (text) {
+        navigator.clipboard.writeText(text);
+        showToast("📋 Disalin: " + text);
+      }
     }
 
     function showToast(message) {
       const toast = document.getElementById("toast");
       toast.textContent = message;
       toast.classList.remove("hidden");
-      toast.classList.add("animate-slide-in");
+      setTimeout(() => toast.classList.add("hidden"), 2500);
+    }
 
-      setTimeout(() => {
-        toast.classList.remove("animate-slide-in");
-        toast.classList.add("animate-fade-out");
-      }, 2000);
-
-      setTimeout(() => {
-        toast.classList.add("hidden");
-        toast.classList.remove("animate-fade-out");
-      }, 2500);
+    function logout() {
+      localStorage.clear();
+      location.reload();
     }
   </script>
 </body>
