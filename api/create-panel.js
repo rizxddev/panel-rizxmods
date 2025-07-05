@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   const payload = {
     name: serverName,
     user: 1, // bisa disesuaikan jika dynamic
-    egg: 5, // ⚠️ pastikan ini ID egg yang benar
+    egg: 15, // ⚠️ pastikan ini ID egg yang benar
     docker_image: "ghcr.io/pterodactyl/yolks:nodejs_18",
     startup: "{{COMMAND}}", // gunakan variable sesuai format Egg
     limits: {
