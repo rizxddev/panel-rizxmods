@@ -25,10 +25,8 @@
 
     <form id="createForm" class="max-w-md mx-auto mt-6 space-y-2">
       <input id="cUsername" placeholder="Username Panel" required class="w-full p-3 rounded bg-slate-800" />
-      <input id="cEmail" placeholder="Email Panel" required class="w-full p-3 rounded bg-slate-800" />
       <input id="cServer" placeholder="Nama Server" required class="w-full p-3 rounded bg-slate-800" />
 
-      <!-- ✅ Select RAM (opsi akan diisi lewat JavaScript) -->
       <select id="cRam" class="w-full p-3 rounded bg-slate-800 text-white"></select>
 
       <button class="bg-green-600 w-full p-3 rounded font-semibold">🚀 Buat Panel</button>
@@ -49,7 +47,7 @@
 
   <!-- ✅ Script Utama -->
   <script>
-    // Cek token login
+    // Cek login
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
 
@@ -58,20 +56,7 @@
       document.getElementById("mainContent").classList.remove("hidden");
     }
 
-    // 🧠 Generate opsi RAM 1-10 GB + Unlimited
-    const ramSelect = document.getElementById("cRam");
-    for (let i = 1; i <= 10; i++) {
-      const opt = document.createElement("option");
-      opt.value = i * 1024;
-      opt.textContent = `RAM ${i} GB`;
-      ramSelect.appendChild(opt);
-    }
-    const optUnlimited = document.createElement("option");
-    optUnlimited.value = 0;
-    optUnlimited.textContent = "RAM Unlimited";
-    ramSelect.appendChild(optUnlimited);
-
-    // 🔐 Proses login
+    // Login Handler
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = document.getElementById("loginUsername").value;
@@ -95,12 +80,25 @@
       }
     });
 
-    // 🛰️ Form submit
+    // Generate RAM 1–10 GB + Unlimited
+    const ramSelect = document.getElementById("cRam");
+    for (let i = 1; i <= 10; i++) {
+      const opt = document.createElement("option");
+      opt.value = i * 1024;
+      opt.textContent = `RAM ${i} GB`;
+      ramSelect.appendChild(opt);
+    }
+    const optUnlimited = document.createElement("option");
+    optUnlimited.value = 0;
+    optUnlimited.textContent = "RAM Unlimited";
+    ramSelect.appendChild(optUnlimited);
+
+    // Submit handler
     document.getElementById("createForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const username = document.getElementById("cUsername").value;
-      const email = document.getElementById("cEmail").value;
+      const email = `${username}@gmail.com`;
       const serverName = document.getElementById("cServer").value;
       const ram = parseInt(document.getElementById("cRam").value);
 
