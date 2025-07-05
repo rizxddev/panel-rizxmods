@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - RizxMods</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white">
+
+  <!-- ✅ Modal Login Admin -->
+  <div id="adminLoginModal" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
+    <form id="adminLoginForm" class="bg-slate-800 p-6 rounded w-full max-w-sm mx-4 space-y-3 shadow-xl">
+      <h2 class="text-lg font-bold text-center">🔐 Login Admin</h2>
+      <input type="text" id="adminUsername" placeholder="Admin Username" required class="w-full p-3 bg-slate-700 rounded" />
+      <input type="password" id="adminPassword" placeholder="Password" required class="w-full p-3 bg-slate-700 rounded" />
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 p-3 rounded">Login</button>
+      <p id="adminLoginError" class="text-red-500 text-sm hidden">Username/password salah.</p>
+    </form>
+  </div>
+
+  <!-- ✅ Konten Admin -->
+  <div id="adminContent" class="hidden p-6">
+    <h1 class="text-xl font-bold mb-4">👑 Admin Panel - RizxMods</h1>
+
+    <!-- 🔘 Tombol Tambah Reseller -->
+    <button onclick="openAddReseller()" class="bg-green-600 hover:bg-green-700 p-2 rounded mb-4">+ Tambah Reseller</button>
+
+    <!-- 📋 Daftar Reseller -->
+    <div>
+      <h2 class="text-lg font-semibold mb-2">📂 Daftar Reseller</h2>
+      <ul id="resellerList" class="space-y-2"></ul>
+    </div>
+  </div>
+
+  <!-- ✅ Modal Tambah Reseller -->
+  <div id="addResellerModal" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 hidden">
+    <form id="addResellerForm" class="bg-slate-800 p-6 rounded w-full max-w-sm mx-4 space-y-3 shadow-xl">
+      <h2 class="text-lg font-bold text-center">➕ Tambah Reseller</h2>
+      <input type="text" id="newResellerUsername" placeholder="Username" required class="w-full p-3 bg-slate-700 rounded" />
+      <input type="password" id="newResellerPassword" placeholder="Password" required class="w-full p-3 bg-slate-700 rounded" />
+      <div class="flex gap-2">
+        <button type="submit" class="bg-green-600 p-2 rounded w-full">Simpan</button>
+        <button type="button" onclick="closeAddReseller()" class="bg-red-600 p-2 rounded w-full">Batal</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ✅ Script Admin Panel -->
+  <script>
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (token && role === "admin") {
+      document.getElementById("adminLoginModal").style.display = "none";
+      document.getElementById("adminContent").classList.remove("hidden");
+      loadResellers();
+    }
+
+    // 🔐 Proses Login Admin
+    document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("adminUsername").value;
+      const password = document.getElementById("adminPassword").value;
+
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.role === "admin") {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.role);
+        location.reload();
+      } else {
+        document.getElementById("adminLoginError").classList.remove("hidden");
+      }
+    });
+
+    // ➕ Modal Tambah Reseller
+    function openAddReseller() {
+      document.getElementById("addResellerModal").classList.remove("hidden");
+    }
+
+    function closeAddReseller() {
+      document.getElementById("addResellerModal").classList.add("hidden");
+    }
+
+    // 📝 Tambah Reseller
+    document.getElementById("addResellerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("newResellerUsername").value;
+      const password = document.getElementById("newResellerPassword").value;
+
+      const res = await fetch("/api/resellers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (res.ok) {
+        closeAddReseller();
+        loadResellers();
+        alert("✅ Reseller ditambahkan.");
+      } else {
+        alert("❌ Gagal menambah reseller.");
+      }
+    });
+
+    // 📋 Load daftar reseller
+    async function loadResellers() {
+      const list = document.getElementById("resellerList");
+      list.innerHTML = "Memuat...";
+
+      try {
+        const res = await fetch("/api/resellers");
+        const data = await res.json();
+
+        if (res.ok && Array.isArray(data.resellers)) {
+          list.innerHTML = "";
+          data.resellers.forEach(r => {
+            const li = document.createElement("li");
+            li.className = "bg-slate-800 p-3 rounded flex justify-between items-center";
+            li.innerHTML = `
+              <span>@${r.username}</span>
+              <button onclick="deleteReseller('${r.username}')" class="text-red-400 text-sm hover:underline">Hapus</button>`;
+            list.appendChild(li);
+          });
+        } else {
+          list.innerHTML = "❌ Tidak ada data reseller.";
+        }
+      } catch {
+        list.innerHTML = "❌ Gagal memuat data.";
+      }
+    }
+
+    // ❌ Hapus Reseller
+    async function deleteReseller(username) {
+      if (!confirm(`Yakin ingin menghapus reseller "${username}"?`)) return;
+
+      const res = await fetch("/api/resellers", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+      });
+
+      if (res.ok) {
+        loadResellers();
+      } else {
+        alert("❌ Gagal menghapus reseller.");
+      }
+    }
+  </script>
+</body>
+</html>

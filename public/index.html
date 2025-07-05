@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reseller Panel RizxMods</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white">
+
+  <!-- ✅ Modal Login -->
+  <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
+    <form id="loginForm" class="bg-slate-800 p-6 rounded w-full max-w-sm mx-4 space-y-3 shadow-xl">
+      <h2 class="text-lg font-bold text-white text-center">🔐 Login</h2>
+      <input type="text" id="loginUsername" placeholder="Username" required class="w-full p-3 bg-slate-700 rounded" />
+      <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-3 bg-slate-700 rounded" />
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 p-3 rounded text-white font-semibold">Login</button>
+      <p id="loginError" class="text-red-500 text-sm hidden">Username atau password salah.</p>
+    </form>
+  </div>
+
+  <!-- ✅ Form Pembuatan Panel -->
+  <div id="mainContent" class="hidden">
+    <h1 class="text-center text-2xl font-bold mt-8">Halo, selamat datang di panel reseller RizxMods</h1>
+
+    <form id="createForm" class="max-w-md mx-auto mt-6 space-y-2">
+      <input id="cUsername" placeholder="Username Panel" required class="w-full p-3 rounded bg-slate-800" />
+      <input id="cEmail" placeholder="Email Panel" required class="w-full p-3 rounded bg-slate-800" />
+      <input id="cServer" placeholder="Nama Server" required class="w-full p-3 rounded bg-slate-800" />
+
+      <select id="cRam" class="w-full p-3 rounded bg-slate-800 text-white">
+        ${[...Array(10).keys()].map(i => {
+          const val = (i + 1) * 1024;
+          return `<option value="${val}">RAM ${i + 1} GB</option>`;
+        }).join('')}
+        <option value="0">RAM Unlimited</option>
+      </select>
+
+      <button class="bg-green-600 w-full p-3 rounded font-semibold">🚀 Buat Panel</button>
+    </form>
+
+    <!-- ✅ Output hasil panel dibuat -->
+    <div id="result" class="mt-6 hidden max-w-md mx-auto bg-slate-800 rounded p-4 text-sm space-y-2">
+      <p>✅ <strong>Panel berhasil dibuat!</strong></p>
+      <p><b>Username:</b> <span id="rUsername"></span></p>
+      <p><b>Email:</b> <span id="rEmail"></span></p>
+      <p><b>Password:</b> <span id="rPassword"></span>
+        <button onclick="copyPassword()" class="ml-2 text-blue-400 hover:underline text-xs">Salin</button>
+      </p>
+    </div>
+
+    <button onclick="logout()" class="mt-8 block mx-auto text-sm underline text-gray-400">Logout</button>
+  </div>
+
+  <!-- ✅ Script Utama -->
+  <script>
+    // Cek token login
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (token && role === "reseller") {
+      document.getElementById("loginModal").style.display = "none";
+      document.getElementById("mainContent").classList.remove("hidden");
+    }
+
+    // Proses login
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("loginUsername").value;
+      const password = document.getElementById("loginPassword").value;
+
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.role === "reseller") {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.role);
+        document.getElementById("loginModal").style.display = "none";
+        document.getElementById("mainContent").classList.remove("hidden");
+      } else {
+        document.getElementById("loginError").classList.remove("hidden");
+      }
+    });
+
+    // Form pembuatan panel
+    document.getElementById("createForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById("cUsername").value;
+      const email = document.getElementById("cEmail").value;
+      const serverName = document.getElementById("cServer").value;
+      const ram = parseInt(document.getElementById("cRam").value);
+
+      const res = await fetch("/api/create-panel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, serverName, ram, cpu: 0 })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById("rUsername").innerText = username;
+        document.getElementById("rEmail").innerText = email;
+        document.getElementById("rPassword").innerText = data.password;
+        document.getElementById("result").classList.remove("hidden");
+      } else {
+        alert("❌ Gagal: " + data.error);
+      }
+    });
+
+    function copyPassword() {
+      const pass = document.getElementById("rPassword").innerText;
+      navigator.clipboard.writeText(pass);
+      alert("🔐 Password disalin!");
+    }
+
+    function logout() {
+      localStorage.clear();
+      location.reload();
+    }
+  </script>
+</body>
+</html>
