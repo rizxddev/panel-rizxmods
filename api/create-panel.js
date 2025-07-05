@@ -17,16 +17,14 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "API_KEY atau URL belum dikonfigurasi." });
   }
 
-  // 🔐 Generate password untuk server
   const password = generateRandomPassword();
 
-  // 🧠 Konfigurasi Payload Server
   const payload = {
     name: serverName,
-    user: 1, // bisa disesuaikan jika dynamic
-    egg: 15, // ⚠️ pastikan ini ID egg yang benar
+    user: 1, // Atur sesuai user ID reseller jika ada
+    egg: 15, // ✅ Pastikan Egg ID ini benar
     docker_image: "ghcr.io/pterodactyl/yolks:nodejs_18",
-    startup: "{{COMMAND}}", // gunakan variable sesuai format Egg
+    startup: "{{CMD_RUN}}", // ✅ HARUS diisi, meskipun pakai variabel
     limits: {
       memory: ram,
       swap: 0,
@@ -38,8 +36,7 @@ export default async function handler(req, res) {
       USERNAME: username,
       EMAIL: email,
       PASSWORD: password,
-      COMMAND: "npm start",     // ✅ wajib jika Egg pakai {{COMMAND}}
-      STARTUP: "npm start"      // ✅ jika Egg juga butuh STARTUP var
+      CMD_RUN: "npm start" // ✅ Sesuai variabel yang dibutuhkan Egg
     },
     feature_limits: {
       databases: 1,
@@ -47,7 +44,7 @@ export default async function handler(req, res) {
       backups: 1
     },
     deploy: {
-      locations: [1], // pastikan location ID tersedia
+      locations: [1], // ✅ Pastikan location ini aktif & punya egg tersebut
       dedicated_ip: false,
       port_range: []
     },
@@ -68,14 +65,13 @@ export default async function handler(req, res) {
     const data = await resp.json();
 
     if (resp.ok) {
-      // ✅ Kirim juga password ke frontend
-      return res.status(200).json({ ...data, password });
+      return res.status(200).json({ ...data, password }); // Kirim password ke frontend
     }
 
-    // ⛔ Error dari Pterodactyl
-    res.status(400).json({ error: data.errors?.[0]?.detail || "Gagal membuat panel." });
+    return res.status(400).json({
+      error: data.errors?.[0]?.detail || "Gagal membuat panel."
+    });
   } catch {
-    // ⛔ Koneksi ke panel gagal
-    res.status(500).json({ error: "Koneksi ke panel gagal." });
+    return res.status(500).json({ error: "Koneksi ke panel gagal." });
   }
 }
