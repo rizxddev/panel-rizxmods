@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>RizxMods - Buat Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0f172a; }
+    .fade { animation: fadeIn 0.5s ease-in; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="text-white">
+  <nav class="bg-slate-900 py-4 shadow">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold text-indigo-400">RizxMods</h1>
+      <a href="/login.html" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">Login Reseller</a>
+    </div>
+  </nav>
+
+  <header class="text-center py-12">
+    <h2 class="text-3xl font-bold text-indigo-300 mb-2">Halo, selamat datang di website reseller panel RizxMods</h2>
+    <p class="text-slate-300">Kamu bisa membuat panel Pterodactyl otomatis di sini</p>
+  </header>
+
+  <main class="max-w-xl mx-auto bg-slate-800 p-6 rounded shadow fade">
+    <form id="createForm" class="space-y-4">
+      <input type="text" id="username" placeholder="Username" class="w-full p-2 bg-slate-700 rounded text-white" required />
+      <input type="text" id="email" placeholder="Email" class="w-full p-2 bg-slate-700 rounded text-white" required />
+      <input type="text" id="serverName" placeholder="Nama Server" class="w-full p-2 bg-slate-700 rounded text-white" required />
+      <select id="ram" class="w-full p-2 bg-slate-700 rounded text-white">
+        <option value="1024">RAM 1 GB</option>
+        <option value="2048">RAM 2 GB</option>
+        <option value="3072">RAM 3 GB</option>
+        <option value="4096">RAM 4 GB</option>
+        <option value="5120">RAM 5 GB</option>
+        <option value="6144">RAM 6 GB</option>
+        <option value="7168">RAM 7 GB</option>
+        <option value="8192">RAM 8 GB</option>
+        <option value="9216">RAM 9 GB</option>
+        <option value="10240">RAM 10 GB</option>
+        <option value="unlimited">Unlimited</option>
+      </select>
+      <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded">🚀 Buat Panel</button>
+    </form>
+    <div id="result" class="mt-4 text-sm"></div>
+  </main>
+
+  <footer class="mt-12 text-center text-slate-400 text-sm py-6">
+    &copy; 2025 <strong>RizxMods</strong>. All rights reserved. <br>
+    <a href="https://wa.me/6281234567890" class="text-indigo-400 hover:underline">Hubungi via WhatsApp</a>
+  </footer>
+
+  <script>
+    const form = document.getElementById("createForm");
+    const result = document.getElementById("result");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const email = document.getElementById("email").value;
+      const serverName = document.getElementById("serverName").value;
+      const ram = document.getElementById("ram").value;
+      const memory = ram === "unlimited" ? 0 : parseInt(ram);
+
+      const payload = {
+        username,
+        email,
+        serverName,
+        ram: memory,
+        cpu: 0
+      };
+
+      try {
+        const res = await fetch("/api/create-panel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          result.innerHTML = `✅ Panel berhasil dibuat!<br>Username: ${username}<br>Email: ${email}`;
+        } else {
+          result.innerHTML = `❌ Gagal: ${data.error}`;
+        }
+      } catch (err) {
+        result.innerHTML = `❌ Gagal koneksi ke server.`;
+      }
+    });
+  </script>
+</body>
+</html>
