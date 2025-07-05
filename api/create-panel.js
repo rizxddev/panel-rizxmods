@@ -10,7 +10,7 @@ function generateRandomPassword(length = 10) {
 export default async function handler(req, res) {
   const { username, email, serverName, ram, cpu } = req.body;
 
-  const api = process.env.PANEL_API_URL;
+  const api = process.env.PANEL_API_URL;         // contoh: https://panel.domain.com
   const key = process.env.PANEL_API_KEY;
 
   if (!api || !key) {
@@ -21,10 +21,10 @@ export default async function handler(req, res) {
 
   const payload = {
     name: serverName,
-    user: 1, // Atur sesuai user ID reseller jika ada
-    egg: 15, // ✅ Pastikan Egg ID ini benar
+    user: 1, // Ganti jika perlu ID user dinamis
+    egg: 15, // Pastikan Egg ID sesuai
     docker_image: "ghcr.io/pterodactyl/yolks:nodejs_18",
-    startup: "{{CMD_RUN}}", // ✅ HARUS diisi, meskipun pakai variabel
+    startup: "{{CMD_RUN}}",
     limits: {
       memory: ram,
       swap: 0,
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       USERNAME: username,
       EMAIL: email,
       PASSWORD: password,
-      CMD_RUN: "npm start" // ✅ Sesuai variabel yang dibutuhkan Egg
+      CMD_RUN: "npm start"
     },
     feature_limits: {
       databases: 1,
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
       backups: 1
     },
     deploy: {
-      locations: [1], // ✅ Pastikan location ini aktif & punya egg tersebut
+      locations: [1],
       dedicated_ip: false,
       port_range: []
     },
@@ -65,7 +65,15 @@ export default async function handler(req, res) {
     const data = await resp.json();
 
     if (resp.ok) {
-      return res.status(200).json({ ...data, password }); // Kirim password ke frontend
+      const uuid = data?.attributes?.uuid;
+      const panelUrl = uuid ? `${api}/server/${uuid}` : null;
+
+      return res.status(200).json({
+        ...data,
+        username, 
+        password,
+        panelUrl
+      });
     }
 
     return res.status(400).json({
