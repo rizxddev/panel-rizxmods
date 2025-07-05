@@ -8,12 +8,12 @@ export default function handler(req, res) {
 
   const { username, password } = req.body;
 
-  // ✅ Login Admin dari .env
-  if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
+  // ✅ Hardcode Admin
+  if (username === "admin" && password === "admin1999rorr") {
     return res.status(200).json({ token: "admin-token", role: "admin" });
   }
 
-  // ✅ Login Reseller dari file JSON
+  // ✅ Cek reseller dari file JSON
   try {
     const filePath = path.resolve('./data/resellers.json');
     const rawData = fs.readFileSync(filePath);
@@ -24,9 +24,8 @@ export default function handler(req, res) {
       return res.status(200).json({ token: "reseller-token", role: "reseller" });
     }
   } catch (err) {
-    console.error("Gagal membaca file resellers:", err);
+    console.error("Gagal membaca file resellers.json", err);
   }
 
-  // ❌ Jika tidak cocok
-  res.status(401).json({ error: "Username atau password salah" });
+  return res.status(401).json({ error: "Username atau password salah." });
 }
