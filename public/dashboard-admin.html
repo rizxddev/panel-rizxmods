@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin RizxMods</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white p-6">
+
+  <script>
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (!token || role !== "admin") {
+      alert("Hanya admin yang bisa mengakses halaman ini.");
+      location.href = "/login.html";
+    }
+  </script>
+
+  <h1 class="text-2xl font-bold mb-4">Dashboard Admin</h1>
+
+  <h2 class="text-lg font-bold">📋 List Panel</h2>
+  <div id="panelList" class="mb-8"></div>
+
+  <h2 class="text-lg font-bold">👥 Daftar Reseller</h2>
+  <input type="text" id="newUsername" placeholder="Username" class="w-full mb-2 p-2 bg-slate-800 rounded" />
+  <input type="password" id="newPassword" placeholder="Password" class="w-full mb-2 p-2 bg-slate-800 rounded" />
+  <button onclick="addReseller()" class="bg-green-600 px-4 py-2 rounded mb-4">Tambah</button>
+  <div id="resellerList"></div>
+
+  <button onclick="logout()" class="mt-6 text-sm text-gray-400 hover:underline">Logout</button>
+
+  <script>
+    async function fetchPanels() {
+      const res = await fetch("/api/list-panels");
+      const data = await res.json();
+      const el = document.getElementById("panelList");
+      if (res.ok) {
+        el.innerHTML = data.servers.map(s => \`<div class="bg-slate-800 p-3 mb-2 rounded">\${s.name} - RAM: \${s.limits.memory}MB</div>\`).join('');
+      }
+    }
+
+    async function fetchResellers() {
+      const res = await fetch("/api/resellers");
+      const data = await res.json();
+      const list = document.getElementById("resellerList");
+      list.innerHTML = data.resellers.map(r => \`
+        <div class="flex justify-between items-center bg-slate-800 p-2 rounded mb-2">
+          <span>\${r.username}</span>
+          <button onclick="deleteReseller('\${r.username}')" class="text-red-400 text-sm">Hapus</button>
+        </div>\`
+      ).join('');
+    }
+
+    async function addReseller() {
+      const username = document.getElementById("newUsername").value;
+      const password = document.getElementById("newPassword").value;
+      const res = await fetch("/api/resellers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      alert(data.message || data.error);
+      fetchResellers();
+    }
+
+    async function deleteReseller(username) {
+      const res = await fetch("/api/resellers", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+      });
+      const data = await res.json();
+      alert(data.message || data.error);
+      fetchResellers();
+    }
+
+    function logout() {
+      localStorage.clear();
+      location.href = "/login.html";
+    }
+
+    fetchPanels();
+    fetchResellers();
+  </script>
+</body>
+</html>
